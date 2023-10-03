@@ -1,0 +1,94 @@
+#include <iostream>
+#include <ctime>
+
+using namespace std;
+
+// Перевірка правильності дати та часу
+bool isDateTimeValid(int year, int month, int day, int hour, int minute, int second) {
+    if (year < 1 || month < 1 || month > 12 || day < 1 || day > 31 || hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 59) {
+        return false;
+    }
+
+    if ((month == 4 || month == 6 || month == 9 || month == 11) && day > 30) {
+        return false;
+    }
+
+    if (month == 2) {
+        bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+        if ((isLeapYear && day > 29) || (!isLeapYear && day > 28)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Обчислення дня тижня для заданої дати
+string getDayOfWeek(int year, int month, int day) {
+    static const string daysOfWeek[] = {"Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"};
+
+    struct tm timeInfo = {};
+    timeInfo.tm_year = year - 1900; // Рік від 1900
+    timeInfo.tm_mon = month - 1;    // Місяць від 0 до 11
+    timeInfo.tm_mday = day;
+
+    time_t rawTime = mktime(&timeInfo);
+    if (rawTime == -1) {
+        return "Невірна дата";
+    }
+
+    int dayOfWeek = timeInfo.tm_wday; // 0 - Неділя, 1 - Понеділок, і т.д.
+
+    return daysOfWeek[dayOfWeek];
+}
+
+int main() {
+    int year, month, day, hour, minute, second;
+
+    cout << "Введіть рік: ";
+    cin >> year;
+    cout << "Введіть місяць (1-12): ";
+    cin >> month;
+    cout << "Введіть день (1-31): ";
+    cin >> day;
+    cout << "Введіть години (0-23): ";
+    cin >> hour;
+    cout << "Введіть хвилини (0-59): ";
+    cin >> minute;
+    cout << "Введіть секунди (0-59): ";
+    cin >> second;
+
+    if (isDateTimeValid(year, month, day, hour, minute, second)) {
+        cout << "Дата та час правильні." << endl;
+
+        cout << "День тижня для введеної дати: " << getDayOfWeek(year, month, day) << endl;
+
+        int daysToAdd;
+        cout << "Введіть кількість днів для додавання до введеної дати: ";
+        cin >> daysToAdd;
+
+        struct tm timeInfo = {};
+        timeInfo.tm_year = year - 1900;
+        timeInfo.tm_mon = month - 1;
+        timeInfo.tm_mday = day;
+        timeInfo.tm_hour = hour;
+        timeInfo.tm_min = minute;
+        timeInfo.tm_sec = second;
+
+        time_t rawTime = mktime(&timeInfo);
+        if (rawTime == -1) {
+            cout << "Помилка при обчисленні нової дати." << endl;
+        } else {
+            rawTime += daysToAdd * 24 * 60 * 60;
+            struct tm* newTimeInfo = localtime(&rawTime);
+
+            cout << "Нова дата та час після додавання " << daysToAdd << " днів: ";
+            cout << newTimeInfo->tm_year + 1900 << "-" << (newTimeInfo->tm_mon + 1) << "-" << newTimeInfo->tm_mday;
+            cout << " " << newTimeInfo->tm_hour << ":" << newTimeInfo->tm_min << ":" << newTimeInfo->tm_sec << endl;
+        }
+    } else {
+        cout << "Невірна дата та/або час." << endl;
+    }
+
+    return 0;
+}
